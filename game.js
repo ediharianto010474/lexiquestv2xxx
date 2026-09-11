@@ -3980,6 +3980,8 @@ function endGame() {
     // =======================================================
     // 🎥 CCTV TRACKER (DIPINDAHKAN KE SINI AGAR TIDAK RALAT)
     // =======================================================
+	let totalQuestions = senaraiSoalan ? senaraiSoalan.length : 0;
+
     if (window.Trackers) {
         let isPerfect = (score === totalQuestions && totalQuestions > 0); 
         let catNameForTracker = (typeof currentGameType !== 'undefined' && currentGameType !== "") ? currentGameType : "unknown_game";
