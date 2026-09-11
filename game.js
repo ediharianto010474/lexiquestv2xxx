@@ -3953,6 +3953,8 @@ function endGame() {
     // =======================================================
     // 📢 NOTIFIKASI UI (DITAMBAH DI SINI)
     // =======================================================
+	let pointsEarned = 0;
+	let coinsEarned = 0;
     let mesejNotifikasi = `Tahniah! Anda berjaya mengumpul ${pointsEarned} XP dan ${coinsEarned} Koin.`;
     
     // Tambah mesej bonus jika ada event LTE sedang berjalan
