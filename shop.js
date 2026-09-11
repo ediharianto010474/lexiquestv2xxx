@@ -745,6 +745,7 @@ function loadAvatarShop() {
             // ==========================================
             let hargaPapar = item.price;
             let diskaunHTML = "";
+            let currentActiveEvent = null;
 
             if (typeof currentActiveEvent !== 'undefined' && currentActiveEvent !== null && currentActiveEvent.rewardType === 'shop_discount') {
                 const kadarDiskaun = currentActiveEvent.rewardValue;
