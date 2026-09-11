@@ -4024,7 +4024,6 @@ function endGame() {
         if (typeof playBgMusic === 'function') playBgMusic();
         if (typeof backToSubjects === 'function') backToSubjects();
     });
-}
 
 function updateUI() {
     // 1. Pastikan data pemain wujud
