@@ -3929,6 +3929,7 @@ function endGame() {
     
     let catName = (typeof currentGameType !== 'undefined' && currentGameType !== "") ? currentGameType : "missing";
     let currentBest = localPlayerData.games[catName] || 0;
+	let score = 0;
     
     if (typeof currentBest === 'object') {
         currentBest = parseInt(currentBest.score || currentBest.best || currentBest.mark || 0);
