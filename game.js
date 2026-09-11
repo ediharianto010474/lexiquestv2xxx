@@ -3624,7 +3624,7 @@ window.startMic = function(btnElement) {
   };
 
 // ==========================================
-// 3. PENGIRAAN MARKAH (END GAME) - VERSI LENGKAP & DISATUKAN
+// 3. PENGIRAAN MARKAH (END GAME) - VERSI LENGKAP & SEMPURNA
 // ==========================================
 function endGame() {
     // 1. Hentikan masa (jika ia masih berjalan)
@@ -3835,7 +3835,7 @@ function endGame() {
     }
 
     // =======================================================
-    // 2. KEMAS KINI DOMPET & PROGRESS MURID
+    // 2. KEMAS KINI DOMPET MURID (DATA SAH)
     // =======================================================
     localPlayerData.points = (localPlayerData.points || 0) + pointsEarned;
     localPlayerData.totalScore = (parseInt(localPlayerData.totalScore) || 0) + pointsEarned;
@@ -3843,7 +3843,7 @@ function endGame() {
     localPlayerData.coins = (parseInt(localPlayerData.coins) || 0) + coinsEarned;
     localPlayerData.totalCoinsEarned = (parseInt(localPlayerData.totalCoinsEarned) || 0) + coinsEarned;
 
-    // 3. PENGIRAAN LEVEL SELAMAT (Lvl HANYA BOLEH NAIK)
+    // 3. PENGIRAAN LEVEL SELAMAT
     const calculatedLevel = Math.floor(localPlayerData.xp / 100) + 1;
     const currentLevel = parseInt(localPlayerData.level) || 1;
 
@@ -3982,6 +3982,8 @@ function endGame() {
         Trackers.rekodKoinDapat(coinsEarned); 
     }
 
+}
+
     // 🎯 REKOD BUKU LOG KE FIREBASE
     try {
         let currentDifficulty = multiplier === 3 ? "Hard" : (multiplier === 2 ? "Medium" : "Easy");
@@ -4024,6 +4026,7 @@ function endGame() {
         if (typeof playBgMusic === 'function') playBgMusic();
         if (typeof backToSubjects === 'function') backToSubjects();
     });
+}
 
 function updateUI() {
     // 1. Pastikan data pemain wujud
