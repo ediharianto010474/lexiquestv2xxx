@@ -3982,8 +3982,6 @@ function endGame() {
         Trackers.rekodKoinDapat(coinsEarned); 
     }
 
-}
-
     // 🎯 REKOD BUKU LOG KE FIREBASE
     try {
         let currentDifficulty = multiplier === 3 ? "Hard" : (multiplier === 2 ? "Medium" : "Easy");
