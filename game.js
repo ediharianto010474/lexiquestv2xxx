@@ -3680,154 +3680,186 @@ function endGame() {
     // 3. Kira peratus markah
     const percentage = Math.round((score / totalQuestions) * 100);
 
-// =========================================================================
-// LOGIK SIMPAN MARKAH, XP & KOIN 💰 (VERSI STABIL - CEGAH RESET DATA)
-// =========================================================================
+    // =========================================================================
+    // LOGIK SIMPAN MARKAH, XP & KOIN 💰 (VERSI STABIL - CEGAH RESET DATA)
+    // =========================================================================
 
-// 🚫 SISTEM PENGHALANG (SAFEGUARD): Sekat simpanan jika data murid belum sedia/kosong
-if (typeof localPlayerData === 'undefined' || !localPlayerData.name) {
-    console.error("⚠️ RALAT KRITIKAL: Data pemain belum dimuatkan sepenuhnya! Rekod permainan TIDAK disimpan bagi mengelakkan data ter-reset.");
-    // Sila paparkan amaran kepada pengguna atau cuba muatkan semula data di sini
-} else {
+    // 🚫 SISTEM PENGHALANG (SAFEGUARD): Sekat simpanan jika data murid belum sedia/kosong
+    if (typeof localPlayerData === 'undefined' || !localPlayerData.name) {
+        console.error("⚠️ RALAT KRITIKAL: Data pemain belum dimuatkan sepenuhnya! Rekod permainan TIDAK disimpan bagi mengelakkan data ter-reset.");
+    } else {
 
-    // 1. TAMBAHKAN PAI & BA KE DALAM ARRAY KESUKARAN
-    const allMedium = [
-        ...(typeof mathCategoryDifficulty !== 'undefined' ? mathCategoryDifficulty.medium : []),
-        ...(typeof englishCategoryDifficulty !== 'undefined' ? englishCategoryDifficulty.medium : []),
-        ...(typeof scienceCategoryDifficulty !== 'undefined' ? scienceCategoryDifficulty.medium : []),
-        ...(typeof bmCategoryDifficulty !== 'undefined' ? bmCategoryDifficulty.medium : []),
-        ...(typeof sejarahCategoryDifficulty !== 'undefined' ? sejarahCategoryDifficulty.medium : []),
-        ...(typeof kesihatanCategoryDifficulty !== 'undefined' ? kesihatanCategoryDifficulty.medium : []),
-        ...(typeof muzikCategoryDifficulty !== 'undefined' ? muzikCategoryDifficulty.medium : []),
-        ...(typeof moralCategoryDifficulty !== 'undefined' ? moralCategoryDifficulty.medium : []),
-        ...(typeof psvCategoryDifficulty !== 'undefined' ? psvCategoryDifficulty.medium : []),
-        ...(typeof rbtCategoryDifficulty !== 'undefined' ? rbtCategoryDifficulty.medium : []),
-        ...(typeof paiCategoryDifficulty !== 'undefined' ? paiCategoryDifficulty.medium : []), 
-        ...(typeof baCategoryDifficulty !== 'undefined' ? baCategoryDifficulty.medium : [])  
-    ];
+        // 1. TAMBAHKAN PAI & BA KE DALAM ARRAY KESUKARAN
+        const allMedium = [
+            ...(typeof mathCategoryDifficulty !== 'undefined' ? mathCategoryDifficulty.medium : []),
+            ...(typeof englishCategoryDifficulty !== 'undefined' ? englishCategoryDifficulty.medium : []),
+            ...(typeof scienceCategoryDifficulty !== 'undefined' ? scienceCategoryDifficulty.medium : []),
+            ...(typeof bmCategoryDifficulty !== 'undefined' ? bmCategoryDifficulty.medium : []),
+            ...(typeof sejarahCategoryDifficulty !== 'undefined' ? sejarahCategoryDifficulty.medium : []),
+            ...(typeof kesihatanCategoryDifficulty !== 'undefined' ? kesihatanCategoryDifficulty.medium : []),
+            ...(typeof muzikCategoryDifficulty !== 'undefined' ? muzikCategoryDifficulty.medium : []),
+            ...(typeof moralCategoryDifficulty !== 'undefined' ? moralCategoryDifficulty.medium : []),
+            ...(typeof psvCategoryDifficulty !== 'undefined' ? psvCategoryDifficulty.medium : []),
+            ...(typeof rbtCategoryDifficulty !== 'undefined' ? rbtCategoryDifficulty.medium : []),
+            ...(typeof paiCategoryDifficulty !== 'undefined' ? paiCategoryDifficulty.medium : []), 
+            ...(typeof baCategoryDifficulty !== 'undefined' ? baCategoryDifficulty.medium : [])  
+        ];
 
-    const allHard = [
-        ...(typeof mathCategoryDifficulty !== 'undefined' ? mathCategoryDifficulty.hard : []),
-        ...(typeof englishCategoryDifficulty !== 'undefined' ? englishCategoryDifficulty.hard : []),
-        ...(typeof scienceCategoryDifficulty !== 'undefined' ? scienceCategoryDifficulty.hard : []),
-        ...(typeof bmCategoryDifficulty !== 'undefined' ? bmCategoryDifficulty.hard : []),
-        ...(typeof sejarahCategoryDifficulty !== 'undefined' ? sejarahCategoryDifficulty.hard : []),
-        ...(typeof kesihatanCategoryDifficulty !== 'undefined' ? kesihatanCategoryDifficulty.hard : []),
-        ...(typeof muzikCategoryDifficulty !== 'undefined' ? muzikCategoryDifficulty.hard : []),
-        ...(typeof moralCategoryDifficulty !== 'undefined' ? moralCategoryDifficulty.hard : []),
-        ...(typeof psvCategoryDifficulty !== 'undefined' ? psvCategoryDifficulty.hard : []),
-        ...(typeof rbtCategoryDifficulty !== 'undefined' ? rbtCategoryDifficulty.hard : []),
-        ...(typeof paiCategoryDifficulty !== 'undefined' ? paiCategoryDifficulty.hard : []), 
-        ...(typeof baCategoryDifficulty !== 'undefined' ? baCategoryDifficulty.hard : [])  
-    ];
+        const allHard = [
+            ...(typeof mathCategoryDifficulty !== 'undefined' ? mathCategoryDifficulty.hard : []),
+            ...(typeof englishCategoryDifficulty !== 'undefined' ? englishCategoryDifficulty.hard : []),
+            ...(typeof scienceCategoryDifficulty !== 'undefined' ? scienceCategoryDifficulty.hard : []),
+            ...(typeof bmCategoryDifficulty !== 'undefined' ? bmCategoryDifficulty.hard : []),
+            ...(typeof sejarahCategoryDifficulty !== 'undefined' ? sejarahCategoryDifficulty.hard : []),
+            ...(typeof kesihatanCategoryDifficulty !== 'undefined' ? kesihatanCategoryDifficulty.hard : []),
+            ...(typeof muzikCategoryDifficulty !== 'undefined' ? muzikCategoryDifficulty.hard : []),
+            ...(typeof moralCategoryDifficulty !== 'undefined' ? moralCategoryDifficulty.hard : []),
+            ...(typeof psvCategoryDifficulty !== 'undefined' ? psvCategoryDifficulty.hard : []),
+            ...(typeof rbtCategoryDifficulty !== 'undefined' ? rbtCategoryDifficulty.hard : []),
+            ...(typeof paiCategoryDifficulty !== 'undefined' ? paiCategoryDifficulty.hard : []), 
+            ...(typeof baCategoryDifficulty !== 'undefined' ? baCategoryDifficulty.hard : [])  
+        ];
 
-    // Tentukan pengganda (multiplier) kesukaran
-    let multiplier = 1; // Default: Easy
-    if (typeof currentGameType !== 'undefined' && currentGameType) {
-        if (allMedium.includes(currentGameType)) multiplier = 2;
-        else if (allHard.includes(currentGameType)) multiplier = 3;
-    }
-
-    // Kira XP dan Koin (Asas)
-    let pointsEarned = score * multiplier; 
-    let coinsEarned = score * 2 * multiplier; 
-
-    // =======================================================
-    // ✨ INTEGRASI BARU: PEMPROSESAN IMPAK GANJARAN LTE
-    // =======================================================
-    let dipengaruhiLTE = false;
-    let jenisBoost = "";
-
-    if (typeof currentActiveEvent !== 'undefined' && currentActiveEvent !== null) {
-        // HALUAN A: Ganjaran Jenis Pengganda (Buff)
-        if (currentActiveEvent.rewardType === 'xp_buff') {
-            pointsEarned = Math.floor(pointsEarned * currentActiveEvent.rewardValue);
-            dipengaruhiLTE = true;
-            jenisBoost = `✨ XP x${currentActiveEvent.rewardValue} BOOST!`;
-            console.log(`🚀 LTE AKTIF: XP digandakan kepada ${pointsEarned}!`);
-        } 
-        else if (currentActiveEvent.rewardType === 'coins_buff') {
-            coinsEarned = Math.floor(coinsEarned * currentActiveEvent.rewardValue);
-            dipengaruhiLTE = true;
-            jenisBoost = `💰 KOIN x${currentActiveEvent.rewardValue} BOOST!`;
-            console.log(`💰 LTE AKTIF: Syiling digandakan kepada ${coinsEarned}!`);
+        // Tentukan pengganda (multiplier) kesukaran
+        let multiplier = 1; // Default: Easy
+        if (typeof currentGameType !== 'undefined' && currentGameType) {
+            if (allMedium.includes(currentGameType)) multiplier = 2;
+            else if (allHard.includes(currentGameType)) multiplier = 3;
         }
-        
-        // HALUAN B: Ganjaran Jenis Kumpul Hari (Login & Play)
-        if (currentActiveEvent.requiredAction === "login_and_play") {
-            if (!localPlayerData.lte_attendance) localPlayerData.lte_attendance = {};
-            if (!localPlayerData.lte_attendance[currentActiveEvent.name]) {
-                localPlayerData.lte_attendance[currentActiveEvent.name] = {};
+
+        // Kira XP dan Koin (Asas)
+        let pointsEarned = score * multiplier; 
+        let coinsEarned = score * 2 * multiplier; 
+
+        // =======================================================
+        // ✨ INTEGRASI BARU: PEMPROSESAN IMPAK GANJARAN LTE
+        // =======================================================
+        let dipengaruhiLTE = false;
+        let jenisBoost = "";
+
+        if (typeof currentActiveEvent !== 'undefined' && currentActiveEvent !== null) {
+            // HALUAN A: Ganjaran Jenis Pengganda (Buff)
+            if (currentActiveEvent.rewardType === 'xp_buff') {
+                pointsEarned = Math.floor(pointsEarned * currentActiveEvent.rewardValue);
+                dipengaruhiLTE = true;
+                jenisBoost = `✨ XP x${currentActiveEvent.rewardValue} BOOST!`;
+                console.log(`🚀 LTE AKTIF: XP digandakan kepada ${pointsEarned}!`);
+            } 
+            else if (currentActiveEvent.rewardType === 'coins_buff') {
+                coinsEarned = Math.floor(coinsEarned * currentActiveEvent.rewardValue);
+                dipengaruhiLTE = true;
+                jenisBoost = `💰 KOIN x${currentActiveEvent.rewardValue} BOOST!`;
+                console.log(`💰 LTE AKTIF: Syiling digandakan kepada ${coinsEarned}!`);
             }
             
-            const today = new Date();
-            const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            
-            // Rekodkan kehadiran hari ini
-            localPlayerData.lte_attendance[currentActiveEvent.name][dateKey] = true;
-            
-            const totalDaysPlayed = Object.keys(localPlayerData.lte_attendance[currentActiveEvent.name]).length;
-            console.log(`📅 [LTE Kehadiran] Misi: ${currentActiveEvent.name} | Progress: ${totalDaysPlayed}/${currentActiveEvent.requiredDays} Hari`);
-
-            // =======================================================
-            // 🎁 SISTEM PENGANUGERAHAN AUTOMATIK LTE (AUTO-GIFT)
-            // =======================================================
-            if (totalDaysPlayed >= currentActiveEvent.requiredDays) {
-                let eventSafeName = currentActiveEvent.name.replace(/\s+/g, '_');
-                if (!localPlayerData.lte_claimed) localPlayerData.lte_claimed = {};
+            // HALUAN B: Ganjaran Jenis Kumpul Hari (Login & Play)
+            if (currentActiveEvent.requiredAction === "login_and_play") {
+                if (!localPlayerData.lte_attendance) localPlayerData.lte_attendance = {};
+                if (!localPlayerData.lte_attendance[currentActiveEvent.name]) {
+                    localPlayerData.lte_attendance[currentActiveEvent.name] = {};
+                }
                 
-                if (!localPlayerData.lte_claimed[eventSafeName]) {
-                    // 1. Hadiah Jenis Lencana (Badge & Title)
-                    if (currentActiveEvent.rewardType === "custom_title" || currentActiveEvent.rewardType === "event_badge") {
-                        if (!localPlayerData.inventory) localPlayerData.inventory = [];
-                        
-                        let badgeIdToGive = "";
-                        if (currentActiveEvent.name.includes("Pencarian Perintis")) badgeIdToGive = "lte_feb_2026";
-                        if (currentActiveEvent.name.includes("Karnival Jaguh")) badgeIdToGive = "lte_jul_2026";
-                        if (currentActiveEvent.name.includes("Pahlawan Merdeka")) badgeIdToGive = "lte_aug_2026";
-                        
-                        if (badgeIdToGive && !localPlayerData.inventory.includes(badgeIdToGive)) {
-                            localPlayerData.inventory.push(badgeIdToGive);
-                            localPlayerData.lte_claimed[eventSafeName] = true;
+                const today = new Date();
+                const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                
+                // Rekodkan kehadiran hari ini
+                localPlayerData.lte_attendance[currentActiveEvent.name][dateKey] = true;
+                
+                const totalDaysPlayed = Object.keys(localPlayerData.lte_attendance[currentActiveEvent.name]).length;
+                console.log(`📅 [LTE Kehadiran] Misi: ${currentActiveEvent.name} | Progress: ${totalDaysPlayed}/${currentActiveEvent.requiredDays} Hari`);
+
+                // =======================================================
+                // 🎁 SISTEM PENGANUGERAHAN AUTOMATIK LTE (AUTO-GIFT)
+                // =======================================================
+                if (totalDaysPlayed >= currentActiveEvent.requiredDays) {
+                    let eventSafeName = currentActiveEvent.name.replace(/\s+/g, '_');
+                    if (!localPlayerData.lte_claimed) localPlayerData.lte_claimed = {};
+                    
+                    if (!localPlayerData.lte_claimed[eventSafeName]) {
+                        // 1. Hadiah Jenis Lencana (Badge & Title)
+                        if (currentActiveEvent.rewardType === "custom_title" || currentActiveEvent.rewardType === "event_badge") {
+                            if (!localPlayerData.inventory) localPlayerData.inventory = [];
                             
-                            jenisBoost = `🏆 MISI SELESAI: Lencana & Title '${currentActiveEvent.rewardValue}' Diperolehi! Buka Profil Untuk Pakai.`;
-                            dipengaruhiLTE = true;
-                            console.log(`🎁 [AUTO-GIFT] Lencana ${badgeIdToGive} ditolak ke inventory!`);
+                            let badgeIdToGive = "";
+                            if (currentActiveEvent.name.includes("Pencarian Perintis")) badgeIdToGive = "lte_feb_2026";
+                            if (currentActiveEvent.name.includes("Karnival Jaguh")) badgeIdToGive = "lte_jul_2026";
+                            if (currentActiveEvent.name.includes("Pahlawan Merdeka")) badgeIdToGive = "lte_aug_2026";
+                            
+                            if (badgeIdToGive && !localPlayerData.inventory.includes(badgeIdToGive)) {
+                                localPlayerData.inventory.push(badgeIdToGive);
+                                localPlayerData.lte_claimed[eventSafeName] = true;
+                                
+                                jenisBoost = `🏆 MISI SELESAI: Lencana & Title '${currentActiveEvent.rewardValue}' Diperolehi! Buka Profil Untuk Pakai.`;
+                                dipengaruhiLTE = true;
+                                console.log(`🎁 [AUTO-GIFT] Lencana ${badgeIdToGive} ditolak ke inventory!`);
+                            }
                         }
-                    }
-                    // 2. Hadiah Jenis Avatar
-                    else if (currentActiveEvent.rewardType === "custom_avatar") {
-                        if (!localPlayerData.ownedAvatars) localPlayerData.ownedAvatars = [];
-                        let avatarFile = `img|assets/avatars/${currentActiveEvent.rewardValue}`;
-                        
-                        if (!localPlayerData.ownedAvatars.includes(avatarFile)) {
-                            localPlayerData.ownedAvatars.push(avatarFile);
-                            localPlayerData.lte_claimed[eventSafeName] = true;
+                        // 2. Hadiah Jenis Avatar
+                        else if (currentActiveEvent.rewardType === "custom_avatar") {
+                            if (!localPlayerData.ownedAvatars) localPlayerData.ownedAvatars = [];
+                            let avatarFile = `img|assets/avatars/${currentActiveEvent.rewardValue}`;
                             
-                            jenisBoost = `👤 MISI SELESAI: Avatar Eksklusif Diperolehi! Buka Profil Untuk Pakai.`;
-                            dipengaruhiLTE = true;
-                            console.log(`🎁 [AUTO-GIFT] Avatar ${avatarFile} ditambah!`);
+                            if (!localPlayerData.ownedAvatars.includes(avatarFile)) {
+                                localPlayerData.ownedAvatars.push(avatarFile);
+                                localPlayerData.lte_claimed[eventSafeName] = true;
+                                
+                                jenisBoost = `👤 MISI SELESAI: Avatar Eksklusif Diperolehi! Buka Profil Untuk Pakai.`;
+                                dipengaruhiLTE = true;
+                                console.log(`🎁 [AUTO-GIFT] Avatar ${avatarFile} ditambah!`);
+                            }
                         }
-                    }
-                    // 3. Hadiah Jenis Border
-                    else if (currentActiveEvent.rewardType === "custom_border") {
-                        if (!localPlayerData.ownedBorders) localPlayerData.ownedBorders = [];
-                        let borderFile = `assets/borders/${currentActiveEvent.rewardValue}`;
-                        
-                        if (!localPlayerData.ownedBorders.includes(borderFile)) {
-                            localPlayerData.ownedBorders.push(borderFile);
-                            localPlayerData.lte_claimed[eventSafeName] = true;
+                        // 3. Hadiah Jenis Border
+                        else if (currentActiveEvent.rewardType === "custom_border") {
+                            if (!localPlayerData.ownedBorders) localPlayerData.ownedBorders = [];
+                            let borderFile = `assets/borders/${currentActiveEvent.rewardValue}`;
                             
-                            jenisBoost = `🖼️ MISI SELESAI: Bingkai Profil Eksklusif Diperolehi! Buka Profil Untuk Pakai.`;
-                            dipengaruhiLTE = true;
-                            console.log(`🎁 [AUTO-GIFT] Border ${borderFile} ditambah!`);
+                            if (!localPlayerData.ownedBorders.includes(borderFile)) {
+                                localPlayerData.ownedBorders.push(borderFile);
+                                localPlayerData.lte_claimed[eventSafeName] = true;
+                                
+                                jenisBoost = `🖼️ MISI SELESAI: Bingkai Profil Eksklusif Diperolehi! Buka Profil Untuk Pakai.`;
+                                dipengaruhiLTE = true;
+                                console.log(`🎁 [AUTO-GIFT] Border ${borderFile} ditambah!`);
+                            }
                         }
                     }
                 }
             }
         }
+
+        // Kemas kini mata dan syiling pemain secara tempatan
+        localPlayerData.points = (localPlayerData.points || 0) + pointsEarned;
+        localPlayerData.coins = (localPlayerData.coins || 0) + coinsEarned;
+
+        // Simpan semula ke localStorage
+        try {
+            localStorage.setItem('playerData', JSON.stringify(localPlayerData));
+        } catch (e) {
+            console.error("Gagal simpan ke localStorage:", e);
+        }
+
+        // Sync ke Firebase Firestore jika sambungan wujud
+        if (typeof db !== 'undefined' && typeof studentInfo !== 'undefined' && studentInfo.name) {
+            const docId = `${studentInfo.school}_${studentInfo.class}_${studentInfo.name}`.replace(/\s+/g, '_');
+            db.collection("players").doc(docId).set(localPlayerData, { merge: true })
+                .then(() => console.log("Data permainan berjaya disimpan ke Firebase!"))
+                .catch(e => console.error("Gagal simpan ke Firebase:", e));
+        }
+
+        // Paparkan paparan keputusankepada pengguna
+        if (typeof showResultModal === 'function') {
+            showResultModal({
+                score: score,
+                totalQuestions: totalQuestions,
+                percentage: percentage,
+                pointsEarned: pointsEarned,
+                coinsEarned: coinsEarned,
+                dipengaruhiLTE: dipengaruhiLTE,
+                jenisBoost: jenisBoost
+            });
+        }
     }
-    // =======================================================
+}
 
 // =======================================================
     // 🛡️ KEMAS KINI AMAN (CEGAH RESET COINS & LEVEL)
