@@ -3670,8 +3670,11 @@ function endGame() {
         }
     }
 
-    let score = 0;
-    const inputs = document.querySelectorAll('.game-input');
+    // 🎯 DAPATKAN INPUT HANYA DARI WADAH SOALAN (Mencegah deteksi input dari form login/logout)
+    const container = document.getElementById('question-container');
+    if (!container) return;
+
+    const inputs = container.querySelectorAll('.game-input');
     const totalQuestions = inputs.length;
 
     // Jika tiada soalan, elakkan ralat
@@ -3681,12 +3684,15 @@ function endGame() {
     const checkBtn = document.getElementById('check-btn');
     if (checkBtn) checkBtn.classList.add('hidden');
 
+    let score = 0;
+
     // 2. Semak setiap jawapan murid
     inputs.forEach(input => {
         input.disabled = true; // Kunci kotak
         
         const userAnswer = input.value.trim().toLowerCase();
-        const correctAnswersList = input.getAttribute('data-answer').trim().toLowerCase().split("|");
+        const rawAnswer = input.getAttribute('data-answer') || "";
+        const correctAnswersList = rawAnswer.trim().toLowerCase().split("|");
 
         if (correctAnswersList.includes(userAnswer) && userAnswer !== "") {
             // BETUL
@@ -3699,9 +3705,9 @@ function endGame() {
             input.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
             
             if (userAnswer === "") {
-                input.value = `(Jawapan: ${input.getAttribute('data-answer')})`;
+                input.value = `(Jawapan: ${rawAnswer})`;
             } else {
-                input.value = `${input.value} ❌ (Betul: ${input.getAttribute('data-answer')})`;
+                input.value = `${input.value} ❌ (Betul: ${rawAnswer})`;
             }
         }
     });
