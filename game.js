@@ -2886,25 +2886,36 @@ function giveXP(category, correctCount) {
 // 1. SISTEM KUIZ & MEMORI PERMAINAN
 // ==========================================
 function initGame(type) {
-    isGanjaranDisimpan = false;
-    if (typeof pauseBgMusic === 'function') pauseBgMusic();
     if (!type) return; 
-    const safeType = type.toUpperCase(); 
 
+    // 🟢 Tandai bahwa permainan resmi dimulai
+    window.isGameActive = true;
+    isGanjaranDisimpan = false;
+
+    if (typeof pauseBgMusic === 'function') pauseBgMusic();
+    
+    // Semak keselamatan localPlayerData
+    if (typeof localPlayerData === 'undefined' || !localPlayerData) {
+        console.error("Data pemain belum dimuatkan.");
+        window.isGameActive = false;
+        return;
+    }
+
+    const safeType = type.toUpperCase(); 
     const playerName = localPlayerData.passcode || localPlayerData.name || "guest";
     const userKey = "memoriPemain_" + playerName;
 
     // ==========================================
-    // 🟢 KEMAS KINI STATUS FIREBASE KE "IN-GAME" (VERSI SELAMAT)
+    // 🟢 KEMAS KINI STATUS FIREBASE KE "IN-GAME"
     // ==========================================
     let player = null;
     if (typeof studentInfo !== 'undefined' && studentInfo && studentInfo.name) {
         player = studentInfo;
-    } else if (typeof localPlayerData !== 'undefined' && localPlayerData && localPlayerData.name) {
+    } else if (localPlayerData && localPlayerData.name) {
         player = localPlayerData;
     }
 
-    if (player && typeof db !== 'undefined') {
+    if (player && typeof db !== 'undefined' && db) {
         const docId = `${player.school}_${player.class}_${player.name}`.replace(/\s+/g, '_');
         db.collection("players").doc(docId).set({
             isOnline: true,
@@ -2912,11 +2923,12 @@ function initGame(type) {
             lastActive: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true }).catch(e => console.log("Gagal kemaskini status in-game:", e));
     }
-    // ==========================================
 
     // Pemulihan Memori
     let currentMem = localPlayerData.lastPlayed || [];
-    if (typeof currentMem === 'string') currentMem = currentMem.replace(/[\[\]"'\\]/g, '').split(',').map(s => s.trim()).filter(s => s !== "");
+    if (typeof currentMem === 'string') {
+        currentMem = currentMem.replace(/[\[\]"'\\]/g, '').split(',').map(s => s.trim()).filter(s => s !== "");
+    }
     
     let localMem = [];
     try {
@@ -2933,6 +2945,7 @@ function initGame(type) {
     // Sistem Anti-Grinding
     if (localPlayerData.lastPlayed.includes(safeType) && !window.currentActiveChallenge) {
         alert(`⛔ THIS CATEGORY IS RESTING! ⛔\n\nYou have played category "${safeType}" recently.\nPlease choose another category to play.\n\nRecent Memory:\n[ ${localPlayerData.lastPlayed.join(' ➔ ')} ]`);
+        window.isGameActive = false; // Batalkan status jika gagal
         return; 
     }
 
@@ -2947,7 +2960,6 @@ function initGame(type) {
     // ==========================================
     currentGameType = type;
     
-    // 1. TUTUP KOTAK SUBJEK SECARA PAKSA JIKA MASIH TERBUKA
     if (typeof closeSubjectModal === 'function') {
         closeSubjectModal();
     }
@@ -2968,6 +2980,7 @@ function initGame(type) {
     const container = document.getElementById('question-container');
     if (!container) return; 
     container.innerHTML = "";
+}
     
     // =========================================================================
     // 2. TETAPAN TAJUK PERMAINAN DINAMIK (MAPPING DICTIONARY)
