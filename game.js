@@ -4012,35 +4012,40 @@ try {
     console.error("Ralat memanggil saveGameRecord:", error);
 }
 
-    // 4. Paparkan pop-up keputusan berserta mesej Boost (jika aktif)
-    let extraHTML = dipengaruhiLTE 
-        ? `<div class="bg-yellow-100 p-2 rounded text-yellow-800 font-black text-sm my-2 animate-bounce border-2 border-yellow-400">${jenisBoost}</div>` 
-        : "";
+// 4. Paparkan pop-up keputusan permainan
+// Sediakan nilai selamat untuk elak ralat ReferenceError
+let safeScore = (typeof score !== 'undefined') ? Number(score) || 0 : 0;
+let safeTotal = (typeof totalQuestions !== 'undefined' && totalQuestions > 0) ? Number(totalQuestions) : 1;
+let safePercentage = (typeof percentage !== 'undefined') 
+    ? Number(percentage) 
+    : Math.round((safeScore / safeTotal) * 100);
 
-    Swal.fire({
-        icon: percentage >= 50 ? 'success' : 'error',
-        title: 'Permainan Tamat! 🏁',
-        html: `Anda berjaya menjawab <b>${score}</b> daripada <b>${totalQuestions}</b> soalan dengan betul.<br><br>
-               Markah Keseluruhan: <span class="text-2xl font-bold text-indigo-600">${percentage}%</span><br>
-               ${extraHTML}
-               <br><span class="text-sm text-green-600 font-bold">+ ${pointsEarned} XP Earned!</span>
-               <br><span class="text-sm text-yellow-600 font-bold">+ ${coinsEarned} Coins Earned!</span>`,
-        confirmButtonText: 'Kembali ke Menu',
-        confirmButtonColor: '#4f46e5',
-        allowOutsideClick: false
-    }).then(() => {
-        // 5. Kembali ke paparan asal
-        const gameArena = document.getElementById('game-arena');
-        const menuScreen = document.getElementById('menu-screen');
-        const finalScoreScreen = document.getElementById('final-score');
-        
-        if (gameArena) gameArena.classList.add('hidden');
-        if (finalScoreScreen) finalScoreScreen.classList.add('hidden');
-        if (menuScreen) menuScreen.classList.remove('hidden');
+let safePoints = (typeof pointsEarned !== 'undefined') ? pointsEarned : 0;
+let safeCoins = (typeof coinsEarned !== 'undefined') ? coinsEarned : 0;
 
-        if (typeof playBgMusic === 'function') playBgMusic();
-        if (typeof backToSubjects === 'function') backToSubjects();
-    });
+Swal.fire({
+    icon: safePercentage >= 50 ? 'success' : 'error',
+    title: 'Permainan Tamat! 🏁',
+    html: `Anda berjaya menjawab <b>${safeScore}</b> daripada <b>${safeTotal}</b> soalan dengan betul.<br><br>
+           Markah Keseluruhan: <span class="text-2xl font-bold text-indigo-600">${safePercentage}%</span><br>
+           <br><span class="text-sm text-green-600 font-bold">+ ${safePoints} XP Earned!</span>
+           <br><span class="text-sm text-yellow-600 font-bold">+ ${safeCoins} Coins Earned!</span>`,
+    confirmButtonText: 'Kembali ke Menu',
+    confirmButtonColor: '#4f46e5',
+    allowOutsideClick: false
+}).then(() => {
+    // 5. Kembali ke paparan asal
+    const gameArena = document.getElementById('game-arena');
+    const menuScreen = document.getElementById('menu-screen');
+    const finalScoreScreen = document.getElementById('final-score');
+    
+    if (gameArena) gameArena.classList.add('hidden');
+    if (finalScoreScreen) finalScoreScreen.classList.add('hidden');
+    if (menuScreen) menuScreen.classList.remove('hidden');
+
+    if (typeof playBgMusic === 'function') playBgMusic();
+    if (typeof backToSubjects === 'function') backToSubjects();
+});
 
 function updateUI() {
     // 1. Pastikan data pemain wujud
