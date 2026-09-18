@@ -3990,18 +3990,27 @@ function endGame() {
         Trackers.rekodKoinDapat(coinsEarned); 
     }
 
-    // 🎯 REKOD BUKU LOG KE FIREBASE
-    try {
-        let currentDifficulty = multiplier === 3 ? "Hard" : (multiplier === 2 ? "Medium" : "Easy");
-        let gameCategoryName = (typeof currentGameType !== 'undefined') ? currentGameType : "Latihan";
-        
-        if (typeof saveGameRecord === 'function') {
-            saveGameRecord(gameCategoryName, currentDifficulty, score, totalQuestions);
-            if (typeof checkAndUnlockLevels === 'function') checkAndUnlockLevels();
-        }
-    } catch (error) {
-        console.error("Ralat memanggil saveGameRecord:", error);
+   // 🎯 REKOD BUKU LOG KE FIREBASE
+try {
+    // 1. Tentukan nilai multiplier secara selamat (gunakan 1 jika tidak wujud)
+    let safeMultiplier = (typeof multiplier !== 'undefined') ? multiplier : 1;
+
+    // 2. Tentukan tahap kesukaran berdasarkan safeMultiplier
+    let currentDifficulty = safeMultiplier === 3 ? "Hard" : (safeMultiplier === 2 ? "Medium" : "Easy");
+    
+    // 3. Semak kategori, skor, dan jumlah soalan secara selamat
+    let gameCategoryName = (typeof currentGameType !== 'undefined') ? currentGameType : "Latihan";
+    let safeScore = (typeof score !== 'undefined') ? score : 0;
+    let safeTotalQuestions = (typeof totalQuestions !== 'undefined') ? totalQuestions : 0;
+
+    // 4. Panggil fungsi simpan rekod
+    if (typeof saveGameRecord === 'function') {
+        saveGameRecord(gameCategoryName, currentDifficulty, safeScore, safeTotalQuestions);
+        if (typeof checkAndUnlockLevels === 'function') checkAndUnlockLevels();
     }
+} catch (error) {
+    console.error("Ralat memanggil saveGameRecord:", error);
+}
 
     // 4. Paparkan pop-up keputusan berserta mesej Boost (jika aktif)
     let extraHTML = dipengaruhiLTE 
