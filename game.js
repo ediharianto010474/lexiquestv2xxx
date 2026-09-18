@@ -2980,7 +2980,6 @@ function initGame(type) {
     const container = document.getElementById('question-container');
     if (!container) return; 
     container.innerHTML = "";
-}
     
     // =========================================================================
     // 2. TETAPAN TAJUK PERMAINAN DINAMIK (MAPPING DICTIONARY)
