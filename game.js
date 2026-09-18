@@ -3628,18 +3628,34 @@ window.startMic = function(btnElement) {
 // 3. PENGIRAAN MARKAH (END GAME) - VERSI LENGKAP & SEMPURNA
 // ==========================================
 function endGame() {
+    // 🛡️ PENGHALANG 1: Hentikan jika arena permainan tersembunyi (elak muncul semasa login/logout)
+    const gameArena = document.getElementById('game-arena');
+    if (!gameArena || gameArena.classList.contains('hidden')) {
+        return; 
+    }
+
+    // 🛡️ PENGHALANG 2: Hentikan jika status permainan tidak aktif
+    if (typeof isGameActive !== 'undefined' && !isGameActive) {
+        return;
+    }
+
+    // Matikan status permainan aktif
+    if (typeof isGameActive !== 'undefined') isGameActive = false;
+
     // 1. Hentikan masa (jika ia masih berjalan)
     if (typeof currentTimer !== 'undefined') clearInterval(currentTimer);
 
     // ==========================================
     // 🟢 KEMAS KINI STATUS FIREBASE KE "IDLE"
     // ==========================================
-    if (typeof studentInfo !== 'undefined' && studentInfo.name) {
+    if (typeof studentInfo !== 'undefined' && studentInfo && studentInfo.name) {
         const docId = `${studentInfo.school}_${studentInfo.class}_${studentInfo.name}`.replace(/\s+/g, '_');
-        db.collection("players").doc(docId).set({
-            isOnline: true,
-            currentStatus: "idle"
-        }, { merge: true }).catch(e => console.log("Gagal kemaskini status idle:", e));
+        if (typeof db !== 'undefined' && db) {
+            db.collection("players").doc(docId).set({
+                isOnline: true,
+                currentStatus: "idle"
+            }, { merge: true }).catch(e => console.log("Gagal kemaskini status idle:", e));
+        }
     }
 
     let score = 0;
