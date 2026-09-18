@@ -2,7 +2,7 @@
 // 1. FIREBASE CONFIGURATION
 // ==========================================
 const firebaseConfig = {
-    apiKey: "AIzaSyDX6PNKeGLMEpyBtnxtvpmyGFyjFq09N5Y", // Kunci V2
+    apiKey: "AIzaSyDX6PNKeGLMEpyBtnxtvpmyGFyjFq09N5Y",
     authDomain: "lexiquestv2.firebaseapp.com",
     projectId: "lexiquestv2",
     storageBucket: "lexiquestv2.firebasestorage.app",
@@ -20,32 +20,30 @@ const rtdb = firebase.database();
 // 3. INITIALIZATION & AUTO-LOGIN
 // ==========================================
 window.onload = async () => {
+    // 🟢 MATIKAN STATUS PERMAINAN SEBAIK SAHAJA APLIKASI DIBUKA
+    window.isGameActive = false;
+
     await loadSchoolsDropdown();
     const savedName = sessionStorage.getItem('playerName');
     const savedClass = sessionStorage.getItem('playerClass');
     const savedSchool = sessionStorage.getItem('playerSchool');
 
     if (savedName && savedClass && savedSchool) {
-        
-        // 🔥 KEMASKINI BARU: Hasilkan ID dan simpan terus ke dalam memori!
         const generatedDocId = `${savedSchool.toUpperCase()}_${savedClass.toUpperCase()}_${savedName.toUpperCase()}`.replace(/\s+/g, '_');
         
-        // Wujudkan pembolehubah global supaya sistem LTE mudah baca
         window.currentUserId = generatedDocId; 
 
         studentInfo = { 
             name: savedName.toUpperCase(), 
             class: savedClass.toUpperCase(), 
             school: savedSchool.toUpperCase(),
-            docId: generatedDocId // <-- INI AKAN MENYELESAIKAN MASALAH LTE KITA!
+            docId: generatedDocId
         };
         
-        await fetchPlayerData(); // <-- Sistem tarik data dari Firestore di sini
+        await fetchPlayerData(); 
         
-        // 🔥 TAMBAH: Salin level dan avatar masuk ke studentInfo 🔥
         if (typeof localPlayerData !== 'undefined' && localPlayerData) {
             studentInfo.level = localPlayerData.level || 0;
-            // KEMASKINI BARU: Masukkan avatar!
             studentInfo.activeAvatar = localPlayerData.activeAvatar || ''; 
         }
         
@@ -58,7 +56,6 @@ window.onload = async () => {
         if (typeof playBgMusic === 'function') playBgMusic(); 
         triggerGameHooks();
 
-        // (Tukar ke 15 nanti)
         if (localPlayerData && localPlayerData.level >= 0) { 
             if (typeof startChallengeListener === 'function') {
                 startChallengeListener(studentInfo.name);
@@ -70,18 +67,12 @@ window.onload = async () => {
 };
 
 function triggerGameHooks() {
-    if (studentInfo.name === "SUPER ADMIN" || studentInfo.class === "ADMIN") return; 
+    if (!studentInfo || studentInfo.name === "SUPER ADMIN" || studentInfo.class === "ADMIN") return; 
 
-    // ==========================================
-    // 🎥 CCTV TRACKER: REKOD LOG MASUK (LOGIN)
-    // ==========================================
     if (window.Trackers) {
         Trackers.rekodLogin();
     }
 
-    // ==========================================
-    // 🔥 TAMBAHAN BARU: LANCARKAN ACARA TERHAD (LTE)
-    // ==========================================
     if (typeof initLTE === 'function') {
         initLTE();
     }
@@ -98,16 +89,11 @@ function triggerGameHooks() {
     listenToActivePlayers();
     listenForNotifications();
 
-    // ==========================================
-    // ---> 🟢 KOD STATUS MASA LOG MASUK (DIBETULKAN ID) <---
-    // ==========================================
-    if (typeof studentInfo !== 'undefined' && studentInfo.name) {
-        // Kita boleh guna terus studentInfo.docId yang kita buat tadi!
-        db.collection("players").doc(studentInfo.docId).set({
-            currentStatus: "idle"
-        }, { merge: true }).catch(e => console.log("Ralat kemaskini status online:", e));
-    }
-    // ==========================================
+    // 🟢 PEMBETULAN: Guna ID selamat jika docId belum wujud
+    const safeDocId = studentInfo.docId || `${studentInfo.school}_${studentInfo.class}_${studentInfo.name}`.replace(/\s+/g, '_');
+    db.collection("players").doc(safeDocId).set({
+        currentStatus: "idle"
+    }, { merge: true }).catch(e => console.log("Ralat kemaskini status online:", e));
 
     setInterval(() => {
         setMyOnlineStatus(true);
@@ -127,7 +113,6 @@ function triggerGameHooks() {
     checkLevelRewardsOnLogin();
     if (typeof playBgMusic === 'function') playBgMusic();
 
-    // 👇 TAMBAH DI SINI: Panggil fungsi semak hadiah
     if (typeof checkPendingNotifications === 'function') {
         checkPendingNotifications();
     }
@@ -148,9 +133,8 @@ async function loginStudent() {
     }
 
     if (schoolInput === "ADMIN" && nameInput === "SUPER ADMIN") {
-        studentInfo = { name: "SUPER ADMIN", class: "ADMIN", school: "ADMIN" };
+        studentInfo = { name: "SUPER ADMIN", class: "ADMIN", school: "ADMIN", docId: "ADMIN_SUPER_ADMIN" };
         
-        // Wujudkan data profil asas supaya sistem tidak ralat
         localPlayerData = { 
             name: "SUPER ADMIN",
             activeTitle: "System Admin", 
@@ -192,11 +176,12 @@ async function loginStudent() {
                 lastPlayed: Array.isArray(data.lastPlayed) ? data.lastPlayed : []
             }; 
             
-            // KEMASKINI BARU: Masukkan avatar di sini!
+            // 🟢 PEMBETULAN: Masukkan docId ke dalam studentInfo
             studentInfo = { 
                 name: nameInput, 
                 class: classInput, 
                 school: schoolInput,
+                docId: docId,
                 activeAvatar: data.activeAvatar || '' 
             };
             
@@ -211,10 +196,6 @@ async function loginStudent() {
             finalizeLogin();
             if (typeof playBgMusic === 'function') playBgMusic();
             
-            // ==========================================
-            // ---> TAMBAH KOD INI DI SINI <---
-            // Mulakan pendengar cabaran HANYA jika pemain Level 15+
-            // ==========================================
             if (localPlayerData.level >= 15) {
                 startChallengeListener(studentInfo.name);
             }
@@ -237,6 +218,8 @@ async function loginStudent() {
 }
 
 function finalizeLogin() {
+    window.isGameActive = false; // 🟢 PASTIKAN GAME TIDAK AKTIF APABILA LOG IN
+
     sessionStorage.setItem('playerName', studentInfo.name);
     sessionStorage.setItem('playerClass', studentInfo.class);
     sessionStorage.setItem('playerSchool', studentInfo.school);
@@ -260,29 +243,23 @@ function showDashboardBasedOnRole() {
 
     const displayClassEl = document.getElementById('menu-player-class'); 
     const playerNameEl = document.getElementById('menu-player-name');
-    
-    // 👇 1. TAMBAH CARI KOTAK LEVEL & TITLE
     const levelEl = document.getElementById('menu-player-level');
     const displayTitleEl = document.getElementById('display-title');
 
-    // Kemaskini Nama
     if (playerNameEl && studentInfo.name) {
         playerNameEl.innerText = studentInfo.name;
     }
 
-    // 👇 2. TAMBAH ARAHAN PAPAR LEVEL & TITLE 
-if (typeof localPlayerData !== 'undefined') {
-    // Kira level sebenar berdasarkan markah terkini!
-    let realLevel = 1;
-    if (typeof calculateLevel === "function") {
-        realLevel = calculateLevel(Number(localPlayerData.totalScore) || 0);
+    if (typeof localPlayerData !== 'undefined') {
+        let realLevel = 1;
+        if (typeof calculateLevel === "function") {
+            realLevel = calculateLevel(Number(localPlayerData.totalScore) || 0);
+        }
+        
+        if (levelEl) levelEl.innerText = "LVL " + realLevel;
+        if (displayTitleEl) displayTitleEl.innerText = localPlayerData.activeTitle || "NOVICE";
     }
-    
-    if (levelEl) levelEl.innerText = "LVL " + realLevel;
-    if (displayTitleEl) displayTitleEl.innerText = localPlayerData.activeTitle || "NOVICE";
-}
 
-    // Kemaskini Papan Pemuka & Kelas berdasarkan Peranan
     if (studentInfo.name === "SUPER ADMIN") {
         document.getElementById('dashboard-super-admin')?.classList.remove('hidden');
         if (displayClassEl) displayClassEl.innerText = "SYSTEM OWNER"; 
@@ -303,7 +280,7 @@ if (typeof localPlayerData !== 'undefined') {
 async function fetchPlayerData() {
     if (studentInfo.name === "SUPER ADMIN") return; 
 
-    const docId = `${studentInfo.school}_${studentInfo.class}_${studentInfo.name}`.replace(/\s+/g, '_');
+    const docId = studentInfo.docId || `${studentInfo.school}_${studentInfo.class}_${studentInfo.name}`.replace(/\s+/g, '_');
     try {
         const docSnap = await db.collection("players").doc(docId).get();
         if (docSnap.exists) {
@@ -319,55 +296,41 @@ async function fetchPlayerData() {
 }
 
 async function saveCloudPlayerData() {
-    // 1. Dapatkan data dari studentInfo ATAU localPlayerData (sebagai pelan sandaran/backup)
-    const pName = (typeof studentInfo !== 'undefined' && studentInfo.name) ? studentInfo.name : localPlayerData.name;
-    const pClass = (typeof studentInfo !== 'undefined' && studentInfo.class) ? studentInfo.class : localPlayerData.class;
-    const pSchool = (typeof studentInfo !== 'undefined' && studentInfo.school) ? studentInfo.school : (localPlayerData.school || "SK_DEFAULT"); // Sila tukar DEFAULT jika perlu
+    const pName = (typeof studentInfo !== 'undefined' && studentInfo.name) ? studentInfo.name : (typeof localPlayerData !== 'undefined' ? localPlayerData.name : null);
+    const pClass = (typeof studentInfo !== 'undefined' && studentInfo.class) ? studentInfo.class : (typeof localPlayerData !== 'undefined' ? localPlayerData.class : null);
+    const pSchool = (typeof studentInfo !== 'undefined' && studentInfo.school) ? studentInfo.school : (typeof localPlayerData !== 'undefined' ? localPlayerData.school : "SK_DEFAULT");
 
-    // 2. Pengawal keselamatan baharu
     if (!pName || pName === "SUPER ADMIN") {
         console.log("Hentikan simpanan: Data pemain tidak lengkap atau admin.");
         return;
     }
     
-    console.log("Memulakan proses simpan ke Firestore untuk:", pName); // Untuk rujukan kita di Console
-    
-    // 3. Hasilkan ID Dokumen
     const docId = `${pSchool}_${pClass}_${pName}`.replace(/\s+/g, '_');
-    
-    // ==========================================
-    // 🕵️‍♂️ ALAT PENGESAN (TRACKER) DITAMBAH DI SINI
-    // ==========================================
-    console.log("SAYA SEDANG MENYIMPAN DATA KE DOKUMEN:", docId);
-    console.log("JUMLAH KOIN YANG DISIMPAN:", localPlayerData.coins);
-    // ==========================================
 
-    // 🔥 SUNTIKAN 10 MATA PELAJARAN (Memaksa Firebase membuat lajur) 🔥
     const lajurSkorSubjek = [
         'score_matematik', 'score_english', 'score_sains', 'score_bm', 
         'score_sejarah', 'score_pjk', 'score_muzik', 'score_moral', 
         'score_psv', 'score_rbt'
     ];
 
-    // Pastikan setiap subjek memiliki setidaknya nilai 0 di memori sebelum dikirim
     lajurSkorSubjek.forEach(field => {
-        localPlayerData[field] = parseInt(localPlayerData[field]) || 0;
+        if (typeof localPlayerData !== 'undefined') {
+            localPlayerData[field] = parseInt(localPlayerData[field]) || 0;
+        }
     });
-    // ==========================================
     
     try {
-        await db.collection("players").doc(docId).set({
-            ...localPlayerData, // Ini sudah merangkumi coins, inventory, 10 subjek, dll
-            name: pName,
-            class: pClass,
-            school: pSchool,
-            // Pastikan dua baris bawah ini betul!
-            totalScore: parseInt(localPlayerData.totalScore) || 0,
-            coins: parseInt(localPlayerData.coins) || 0, 
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        
-        console.log("✅ Berjaya simpan ke Firestore!");
+        if (typeof localPlayerData !== 'undefined') {
+            await db.collection("players").doc(docId).set({
+                ...localPlayerData, 
+                name: pName,
+                class: pClass,
+                school: pSchool,
+                totalScore: parseInt(localPlayerData.totalScore) || 0,
+                coins: parseInt(localPlayerData.coins) || 0, 
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
         
         if (typeof updateCategoryProgress === 'function') {
             updateCategoryProgress();
@@ -387,12 +350,12 @@ function updateUI() {
     const elTitle = document.getElementById('display-title');
     const elAvatar = document.getElementById('menu-avatar-container');
 
-    if(elName) elName.innerText = studentInfo.name;
-    if(elClass && studentInfo.class !== "ADMIN") elClass.innerText = "Class: " + studentInfo.class;
-    if(elCoins) elCoins.innerText = localPlayerData.coins || 0;
-    if(elTitle) elTitle.innerText = localPlayerData.activeTitle || "Novice";
+    if(elName && typeof studentInfo !== 'undefined') elName.innerText = studentInfo.name;
+    if(elClass && typeof studentInfo !== 'undefined' && studentInfo.class !== "ADMIN") elClass.innerText = "Class: " + studentInfo.class;
+    if(elCoins && typeof localPlayerData !== 'undefined') elCoins.innerText = localPlayerData.coins || 0;
+    if(elTitle && typeof localPlayerData !== 'undefined') elTitle.innerText = localPlayerData.activeTitle || "Novice";
     
-    if (elAvatar) {
+    if (elAvatar && typeof localPlayerData !== 'undefined') {
         if (localPlayerData.activeAvatar && localPlayerData.activeAvatar.icon) {
             elAvatar.innerText = localPlayerData.activeAvatar.icon;
         } else {
@@ -402,27 +365,24 @@ function updateUI() {
 }
 
 async function logout() {
-    // 1. Tukar status jadi offline sebelum keluar
+    window.isGameActive = false; // 🟢 MATIKAN PERMAINAN SEMASA LOG OUT
     await setMyOnlineStatus(false); 
-    
-    // 2. Kosongkan semua memori sesi sessionStorage
     sessionStorage.clear();
-    
-    // 3. Muat semula halaman untuk kembali ke skrin log masuk
     location.reload();
 }
 
 // ==========================================
-// 8. LEVEL REWARDS (KEMASKINI: 100 Coins Per Level)
+// 8. LEVEL REWARDS 
 // ==========================================
 function calculateLevel(xp) {
     if (!xp || xp < 100) return 1;
-    // Formula kuadratik: Level = (-1 + sqrt(9 + 0.16 * xp)) / 2
     let lvl = (-1 + Math.sqrt(9 + 0.16 * xp)) / 2;
     return Math.floor(lvl) + 1;
 }
 
 function checkLevelRewardsOnLogin() {
+    if (typeof localPlayerData === 'undefined' || !localPlayerData) return;
+
     let currentTotalXP = Number(localPlayerData.totalScore) || 0;
     let currentLevel = calculateLevel(currentTotalXP);
 
@@ -431,10 +391,9 @@ function checkLevelRewardsOnLogin() {
     let totalRewardToGive = 0;
     let newlyClaimed = [];
 
-    // Semak level mana yang belum diberi hadiah
     for (let i = 2; i <= currentLevel; i++) {
         if (!claimedArray.includes(i)) {
-            totalRewardToGive += 100; // Hadiah tetap 100 coins
+            totalRewardToGive += 100; 
             newlyClaimed.push(i);
             claimedArray.push(i);
         }
@@ -467,15 +426,15 @@ function openAdminPanel() {
     const schoolSection = document.getElementById('school-admin-section');
     const schoolLabel = document.getElementById('admin-current-school');
 
-    superSection.classList.add('hidden');
-    schoolSection.classList.add('hidden');
+    superSection?.classList.add('hidden');
+    schoolSection?.classList.add('hidden');
 
     if (studentInfo.name === "SUPER ADMIN") {
-        superSection.classList.remove('hidden');
+        superSection?.classList.remove('hidden');
     } 
     else if (studentInfo.class === "ADMIN" || localPlayerData.activeTitle === "School Admin") {
-        schoolSection.classList.remove('hidden');
-        schoolLabel.innerText = `Pangkalan Data: ${studentInfo.school}`;
+        schoolSection?.classList.remove('hidden');
+        if (schoolLabel) schoolLabel.innerText = `Pangkalan Data: ${studentInfo.school}`;
     }
 }
 
@@ -572,14 +531,13 @@ async function registerStudent() {
 }
 
 // ==========================================
-// 10. DINAMIK DROPDOWN (KEMASKINI V2)
+// 10. DINAMIK DROPDOWN
 // ==========================================
 async function loadSchoolsDropdown() {
-    const schoolSelect = document.getElementById('login-school'); // ID yang betul!
+    const schoolSelect = document.getElementById('login-school');
     if (!schoolSelect) return;
 
     try {
-        // Tarik senarai sekolah dari pendaftaran Super Admin
         const snapshot = await db.collection("school_admins").get();
         let schoolsList = new Set();
         
@@ -611,9 +569,8 @@ async function loadSchoolsDropdown() {
 }
 
 // ==========================================
-// 11. DATA FETCHING & EDITING (ADMIN DASHBOARD)
+// 11. ADMIN DASHBOARD DATA
 // ==========================================
-
 async function loadAdminSchools() {
     const list = document.getElementById('sa-schools-list');
     if(!list) return;
@@ -714,9 +671,6 @@ async function loadGlobalStudents() {
     }
 }
 
-// ------------------------------------------
-// FUNGSI EDIT ADMIN SEKOLAH (POPUP)
-// ------------------------------------------
 async function editSchoolAdmin(docId, school, currentName, currentPin) {
     const { value: formValues } = await Swal.fire({
         title: 'Edit Admin Sekolah',
@@ -743,7 +697,6 @@ async function editSchoolAdmin(docId, school, currentName, currentPin) {
             
             const newDocId = `${school}_ADMIN_${formValues.newName}`.replace(/\s+/g, '_');
             
-            // Jika nama admin bertukar, kita perlu pindahkan ID Dokumen di Firebase
             if (newDocId !== docId) {
                 const oldDoc = await db.collection("players").doc(docId).get();
                 const data = oldDoc.data();
@@ -753,13 +706,12 @@ async function editSchoolAdmin(docId, school, currentName, currentPin) {
                 await db.collection("players").doc(newDocId).set(data);
                 await db.collection("players").doc(docId).delete();
             } else {
-                // Jika hanya tukar PIN, update dokumen lama
                 await db.collection("players").doc(docId).update({
                     passcode: formValues.passcode
                 });
             }
             Swal.fire("Berjaya", "Data admin telah dikemaskini.", "success");
-            loadAdminSchools(); // Segar semula jadual
+            loadAdminSchools();
         } catch (e) {
             console.error(e);
             Swal.fire("Ralat", "Gagal mengemaskini data.", "error");
@@ -767,9 +719,6 @@ async function editSchoolAdmin(docId, school, currentName, currentPin) {
     }
 }
 
-// ------------------------------------------
-// FUNGSI EDIT MURID (POPUP)
-// ------------------------------------------
 async function editStudent(docId, school, currentName, currentClass, currentCoins, currentPin) {
     const { value: formValues } = await Swal.fire({
         title: 'Edit Data Murid',
@@ -802,7 +751,6 @@ async function editStudent(docId, school, currentName, currentClass, currentCoin
             
             const newDocId = `${school}_${formValues.newClass}_${formValues.newName}`.replace(/\s+/g, '_');
             
-            // Logik pemindahan rekod jika Nama atau Kelas berubah (untuk kekalkan Login murid)
             if (newDocId !== docId) {
                 const oldDoc = await db.collection("players").doc(docId).get();
                 const data = oldDoc.data();
@@ -820,7 +768,7 @@ async function editStudent(docId, school, currentName, currentClass, currentCoin
                 });
             }
             Swal.fire("Berjaya", "Profil murid telah dikemaskini.", "success");
-            loadGlobalStudents(); // Segar semula jadual
+            loadGlobalStudents();
         } catch (e) {
             console.error(e);
             Swal.fire("Ralat", "Gagal mengemaskini data.", "error");
@@ -828,9 +776,6 @@ async function editStudent(docId, school, currentName, currentClass, currentCoin
     }
 }
 
-// ------------------------------------------
-// ANALISIS & LAIN-LAIN
-// ------------------------------------------
 async function loadSystemAnalysis() {
     const elSchools = document.getElementById('stat-total-schools');
     const elStudents = document.getElementById('stat-total-students');
@@ -886,10 +831,9 @@ async function deleteAccount(docId) {
 }
 
 // ==========================================
-// 12. FUNGSI PEMAIN AKTIF (PENGASINGAN KOLEKSI - ANTI-READS LEAK)
+// 12. FUNGSI PEMAIN AKTIF
 // ==========================================
 async function setMyOnlineStatus(status) {
-    // 1. CARI DATA PEMAIN DENGAN SELAMAT (Elak ReferenceError)
     let player = null;
     if (typeof studentInfo !== 'undefined' && studentInfo && studentInfo.name) {
         player = studentInfo;
@@ -903,7 +847,6 @@ async function setMyOnlineStatus(status) {
     try {
         const docId = `${player.school}_${player.class}_${player.name}`.replace(/\s+/g, '_');
         
-        // 🔴 KEMASKINI 1: Kemaskini status utama di 'players' untuk PVP (Tanpa listener)
         const userRef = db.collection('players').doc(docId);
         let updateData = {
             isOnline: status,
@@ -916,13 +859,11 @@ async function setMyOnlineStatus(status) {
         }
         userRef.set(updateData, { merge: true }).catch(e => console.error(e));
 
-        // 🟢 KEMASKINI 2: Sediakan mini-dokumen untuk senarai 'Online' (Koleksi Baharu!)
         const onlineRef = db.collection('online_status').doc(docId);
-        let currentLvl = typeof calculateLevel === "function" ? calculateLevel(Number(localPlayerData.totalScore) || 0) : (localPlayerData.level || 1);
-        let currentAvatar = typeof localPlayerData !== 'undefined' ? (localPlayerData.activeAvatar || "👤") : "👤";
+        let currentLvl = typeof calculateLevel === "function" ? calculateLevel(Number(localPlayerData?.totalScore) || 0) : (localPlayerData?.level || 1);
+        let currentAvatar = typeof localPlayerData !== 'undefined' ? (localPlayerData?.activeAvatar || "👤") : "👤";
         
         if (status === true) {
-            // Tulis dokumen ringan jika online
             await onlineRef.set({
                 name: player.name,
                 school: player.school,
@@ -932,7 +873,6 @@ async function setMyOnlineStatus(status) {
                 lastActive: firebase.firestore.FieldValue.serverTimestamp()
             });
         } else {
-            // Padam dari memori Firebase jika offline (Jimat Ruang!)
             await onlineRef.delete();
         }
 
@@ -957,35 +897,12 @@ function listenForNotifications() {
                   unreadChats.push(data.lastSender);
               }
           });
-          
-          console.log("Mesej belum dibaca dari:", unreadChats);
-          // 🛑 KEMASKINI: Tiada lagi panggilan setMyOnlineStatus(true) di sini!
-          // Loop Reads dari notifikasi telah ditutup sepenuhnya.
       });
 }
-
-// ==========================================
-// 🔥 TAMBAHAN: AUTO-DETECT BROWSER BUKA / TUTUP 🔥
-// ==========================================
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        if (typeof setMyOnlineStatus === 'function') {
-            setMyOnlineStatus(true);
-            console.log("📡 Isyarat dihantar: Pemain kini ONLINE!");
-        }
-    }, 2000);
-});
-
-window.addEventListener('beforeunload', () => {
-    if (typeof setMyOnlineStatus === 'function') {
-        setMyOnlineStatus(false);
-    }
-});
 
 function listenToActivePlayers() {
     if (typeof db === 'undefined' || !studentInfo) return;
 
-    // 🟢 KEMASKINI 3: Pantau koleksi 'online_status', BUKAN 'players'
     db.collection('online_status')
       .where('school', '==', studentInfo.school)
       .where('isOnline', '==', true)
@@ -1026,7 +943,6 @@ function listenToActivePlayers() {
 
               const isUnread = typeof unreadChats !== 'undefined' && unreadChats.includes(player.name);
 
-              // 🟢 KEMASKINI 4: Rekabentuk UI Transparent Kompak (Gaya Mobile Legends)
               const playerHtml = `
                   <div class="flex items-center gap-2 bg-transparent p-1 rounded hover:bg-black/20 transition-colors cursor-pointer relative" onclick="openChatWith('${player.name}')">
                       ${isUnread ? '<span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white animate-pulse z-10 shadow-sm"></span>' : ''}
@@ -1056,78 +972,63 @@ function listenToActivePlayers() {
           }
       });
 }
-              
-// ==========================================
-// KAWALAN UI & FIREBASE KOTAK SEMBANG (CHAT)
-// ==========================================
 
+// ==========================================
+// KAWALAN CHAT
+// ==========================================
 let currentChatRecipient = ""; 
-let currentChatSnapshot = null; // Untuk simpan status 'telinga' Firebase
+let currentChatSnapshot = null; 
 
-// 1. Fungsi cipta ID Bilik Sembang yang unik (Gabungan 2 nama)
 function getChatRoomId(player1, player2) {
-    // Susun nama mengikut abjad supaya Ahmad-Siti dan Siti-Ahmad guna bilik yang sama
     const sortedNames = [player1, player2].sort();
-    // Buang jarak untuk elak ralat pada nama dokumen Firestore
     return `room_${sortedNames[0]}_${sortedNames[1]}`.replace(/\s+/g, '_');
 }
 
-// 2. Buka kotak sembang & mula dengar mesej
 async function openChatWith(playerName) {
     currentChatRecipient = playerName;
     
-    // Buka UI kotak sembang
     const chatBox = document.getElementById('floating-chat-box');
     const recipientNameEl = document.getElementById('chat-recipient-name');
     const bodyContainer = document.getElementById('chat-body-container');
     const minimizeBtn = document.getElementById('btn-minimize-chat');
     
-    recipientNameEl.innerText = playerName;
-    bodyContainer.classList.remove('hidden');
-    minimizeBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+    if (recipientNameEl) recipientNameEl.innerText = playerName;
+    bodyContainer?.classList.remove('hidden');
+    if (minimizeBtn) minimizeBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
     
-    chatBox.classList.remove('hidden');
-    chatBox.classList.add('flex');
+    chatBox?.classList.remove('hidden');
+    chatBox?.classList.add('flex');
     
-    // ==========================================
-    // KEMASKINI BARU: Padam status 'unread' dengan Selamat
-    // ==========================================
     const myName = studentInfo.name;
     const roomId = getChatRoomId(myName, playerName);
     
     try {
-        // GUNA 'set' dengan 'merge: true' BUKAN 'update' 
-        // Ini memastikan jika dokumen chat belum wujud, Firebase akan menciptanya terlebih dahulu tanpa memberi ralat.
         await db.collection('chats').doc(roomId).set({
             unreadFor: "" 
         }, { merge: true });
-        
     } catch (e) {
         console.error("Gagal mengemaskini status unread:", e);
     }
 
-    // Mula dengar mesej masuk
     listenToChatMessages(playerName);
 }
 
-// 3. Fungsi Dengar Mesej (Real-time dari Firestore)
 function listenToChatMessages(recipientName) {
     const myName = studentInfo.name;
     const roomId = getChatRoomId(myName, recipientName);
     const messagesContainer = document.getElementById('chat-messages');
 
-    // Jika sebelum ini ada dengar chat orang lain, matikan 'telinga' itu dulu
     if (currentChatSnapshot) {
         currentChatSnapshot(); 
     }
 
-    messagesContainer.innerHTML = '<div class="text-center text-xs text-gray-400 mt-4"><i class="fas fa-spinner fa-spin"></i> Memuatkan mesej...</div>';
+    if (messagesContainer) messagesContainer.innerHTML = '<div class="text-center text-xs text-gray-400 mt-4"><i class="fas fa-spinner fa-spin"></i> Memuatkan mesej...</div>';
 
-    // Dengar perubahan di bilik sembang khusus ini
     currentChatSnapshot = db.collection('chats').doc(roomId).collection('messages')
         .orderBy('timestamp', 'asc')
         .onSnapshot((snapshot) => {
-            messagesContainer.innerHTML = ''; // Kosongkan container
+            if (!messagesContainer) return;
+            messagesContainer.innerHTML = ''; 
 
             if (snapshot.empty) {
                 messagesContainer.innerHTML = '<div class="text-center text-xs text-gray-400 mt-4 italic">Belum ada mesej. Ucapkan Hai!</div>';
@@ -1136,10 +1037,8 @@ function listenToChatMessages(recipientName) {
 
             snapshot.forEach((doc) => {
                 const data = doc.data();
-                const isMe = (data.sender === myName); // Semak siapa hantar
+                const isMe = (data.sender === myName); 
 
-                // Bina HTML berdasarkan siapa yang hantar
-                // NOTA: Kelas 'whitespace-pre-wrap' ditambah pada kedua-dua gelembung!
                 const msgHtml = isMe ? 
                     `<div class="flex justify-end mb-2">
                         <div class="whitespace-pre-wrap bg-indigo-500 text-white text-[11px] py-2 px-3 rounded-2xl rounded-tr-none shadow-sm max-w-[85%]">
@@ -1156,18 +1055,12 @@ function listenToChatMessages(recipientName) {
                 messagesContainer.insertAdjacentHTML('beforeend', msgHtml);
             });
 
-            // Auto-scroll ke mesej paling bawah (mesej terkini)
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         });
 }
 
-// ==========================================
-// 8. LOGIK QUICK CHAT (MESEJ PANTAS)
-// ==========================================
-
 let isQuickChatMenuOpen = false;
 
-// Buka/Tutup menu pop-up bawah
 function toggleQuickChat(forceState) {
     const menu = document.getElementById('quick-chat-menu');
     const chevron = document.getElementById('quick-chat-chevron');
@@ -1175,82 +1068,79 @@ function toggleQuickChat(forceState) {
     isQuickChatMenuOpen = forceState !== undefined ? forceState : !isQuickChatMenuOpen;
 
     if (isQuickChatMenuOpen) {
-        menu.classList.remove('hidden');
-        menu.classList.add('flex');
-        chevron.classList.add('rotate-180');
-        showQuickChatCategories(); // Reset sentiasa tunjuk kategori mula-mula
+        menu?.classList.remove('hidden');
+        menu?.classList.add('flex');
+        chevron?.classList.add('rotate-180');
+        showQuickChatCategories(); 
     } else {
-        menu.classList.add('hidden');
-        menu.classList.remove('flex');
-        chevron.classList.remove('rotate-180');
+        menu?.classList.add('hidden');
+        menu?.classList.remove('flex');
+        chevron?.classList.remove('rotate-180');
     }
 }
 
-// Papar senarai Kategori (Greetings, Social, dll)
 function showQuickChatCategories() {
     const list = document.getElementById('quick-chat-list');
     const title = document.getElementById('quick-chat-title');
     const backBtn = document.getElementById('quick-chat-back');
 
-    title.innerText = "KATEGORI MESEJ";
-    backBtn.classList.add('hidden');
+    if (title) title.innerText = "KATEGORI MESEJ";
+    backBtn?.classList.add('hidden');
+    if (!list) return;
     list.innerHTML = '';
 
-    // Gelung baca dari objek quickChatData
-    for (let category in quickChatData) {
-        const btn = document.createElement('button');
-        btn.className = "text-left text-xs font-bold text-gray-700 bg-gray-50 hover:bg-indigo-50 p-2.5 rounded-lg border border-gray-100 hover:border-indigo-200 transition-colors shadow-sm active:scale-[0.98]";
-        btn.innerText = category;
-        btn.onclick = () => showQuickChatMessages(category);
-        list.appendChild(btn);
+    if (typeof quickChatData !== 'undefined') {
+        for (let category in quickChatData) {
+            const btn = document.createElement('button');
+            btn.className = "text-left text-xs font-bold text-gray-700 bg-gray-50 hover:bg-indigo-50 p-2.5 rounded-lg border border-gray-100 hover:border-indigo-200 transition-colors shadow-sm active:scale-[0.98]";
+            btn.innerText = category;
+            btn.onclick = () => showQuickChatMessages(category);
+            list.appendChild(btn);
+        }
     }
 }
 
-// Papar ayat sebenar di dalam kategori yang dipilih (Dikemas kini untuk 5 Bahasa)
 function showQuickChatMessages(category) {
     const list = document.getElementById('quick-chat-list');
     const title = document.getElementById('quick-chat-title');
     const backBtn = document.getElementById('quick-chat-back');
 
-    title.innerText = category.toUpperCase();
-    backBtn.classList.remove('hidden');
+    if (title) title.innerText = category.toUpperCase();
+    backBtn?.classList.remove('hidden');
+    if (!list) return;
     list.innerHTML = '';
 
-    const messages = quickChatData[category];
-    messages.forEach(msgObj => {
-        const btn = document.createElement('button');
-        // Kita guna flex-col supaya ayat tersusun ke bawah seperti senarai
-        btn.className = "text-left flex flex-col gap-0.5 w-full bg-white hover:bg-green-50 p-2.5 rounded-lg border border-gray-100 hover:border-green-300 transition-colors shadow-sm active:scale-[0.98] mb-2";
-        
-        // Paparan 5 Bahasa di dalam menu pop-up butang
-        btn.innerHTML = `
-            <span class="text-[12px] font-bold text-gray-800">${msgObj.en}</span>
-            <span class="text-[10px] font-medium text-gray-500 border-t border-gray-100 pt-1 mt-1">🇲🇾 ${msgObj.ms}</span>
-            <span class="text-[10px] font-medium text-blue-600">🇨🇳 ${msgObj.zh}</span>
-            <span class="text-[10px] font-medium text-red-500">🇯🇵 ${msgObj.ja}</span>
-            <span class="text-[10px] font-medium text-emerald-600">🇸🇦 ${msgObj.ar}</span>
-        `;
+    if (typeof quickChatData !== 'undefined' && quickChatData[category]) {
+        const messages = quickChatData[category];
+        messages.forEach(msgObj => {
+            const btn = document.createElement('button');
+            btn.className = "text-left flex flex-col gap-0.5 w-full bg-white hover:bg-green-50 p-2.5 rounded-lg border border-gray-100 hover:border-green-300 transition-colors shadow-sm active:scale-[0.98] mb-2";
+            
+            btn.innerHTML = `
+                <span class="text-[12px] font-bold text-gray-800">${msgObj.en}</span>
+                <span class="text-[10px] font-medium text-gray-500 border-t border-gray-100 pt-1 mt-1">🇲🇾 ${msgObj.ms}</span>
+                <span class="text-[10px] font-medium text-blue-600">🇨🇳 ${msgObj.zh}</span>
+                <span class="text-[10px] font-medium text-red-500">🇯🇵 ${msgObj.ja}</span>
+                <span class="text-[10px] font-medium text-emerald-600">🇸🇦 ${msgObj.ar}</span>
+            `;
 
-        // Gabungkan kesemua 5 bahasa menggunakan "line break (\n)" untuk dihantar ke Firebase
-        const combinedMessage = `${msgObj.en}\n🇲🇾 ${msgObj.ms}\n🇨🇳 ${msgObj.zh}\n🇯🇵 ${msgObj.ja}\n🇸🇦 ${msgObj.ar}`;
+            const combinedMessage = `${msgObj.en}\n🇲🇾 ${msgObj.ms}\n🇨🇳 ${msgObj.zh}\n🇯🇵 ${msgObj.ja}\n🇸🇦 ${msgObj.ar}`;
 
-        // Apabila mesej ditekan, ia menghantar kesemua 5 bahasa kepada rakan
-        btn.onclick = () => sendQuickMessage(combinedMessage); 
-        list.appendChild(btn);
-    });
+            btn.onclick = () => sendQuickMessage(combinedMessage); 
+            list.appendChild(btn);
+        });
+    }
 }
 
-// Hantar Mesej ke Firebase (Ganti fungsi sendMessage lama)
 async function sendQuickMessage(msgText) {
     if (!msgText || !currentChatRecipient) return; 
     
     const myName = studentInfo.name;
     const roomId = getChatRoomId(myName, currentChatRecipient);
     
-    toggleQuickChat(false); // Tutup menu
+    toggleQuickChat(false); 
     
     try {
-        // 1. Masukkan mesej ke pangkalan data
         await db.collection('chats').doc(roomId).collection('messages').add({
             sender: myName,
             recipient: currentChatRecipient,
@@ -1258,7 +1148,6 @@ async function sendQuickMessage(msgText) {
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // 2. INI SUIS TITIK MERAH: Maklumkan kepada rakan bahawa ada mesej belum dibaca
         await db.collection('chats').doc(roomId).set({
             lastSender: myName,
             unreadFor: currentChatRecipient 
@@ -1269,52 +1158,45 @@ async function sendQuickMessage(msgText) {
     }
 }
 
-// 6. Tutup kotak & matikan 'telinga'
 function closeChatBox(event) {
     if (event) event.stopPropagation(); 
     
     const chatBox = document.getElementById('floating-chat-box');
-    chatBox.classList.add('hidden');
-    chatBox.classList.remove('flex');
+    chatBox?.classList.add('hidden');
+    chatBox?.classList.remove('flex');
     currentChatRecipient = "";
     
     if (currentChatSnapshot) {
-        currentChatSnapshot(); // Berhenti dengar mesej bila tutup chat (jimat kuota)
+        currentChatSnapshot(); 
         currentChatSnapshot = null;
     }
 }
 
-// 7. Minimize kotak
 function toggleChatMinimize() {
     const bodyContainer = document.getElementById('chat-body-container');
     const minimizeBtn = document.getElementById('btn-minimize-chat');
     
-    if (bodyContainer.classList.contains('hidden')) {
+    if (bodyContainer?.classList.contains('hidden')) {
         bodyContainer.classList.remove('hidden');
-        minimizeBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+        if (minimizeBtn) minimizeBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
     } else {
-        bodyContainer.classList.add('hidden');
-        minimizeBtn.innerHTML = '<i class="fas fa-chevron-up"></i>';
+        bodyContainer?.classList.add('hidden');
+        if (minimizeBtn) minimizeBtn.innerHTML = '<i class="fas fa-chevron-up"></i>';
     }
 }
 
 // ==========================================
-// 13. PENGESAN TUTUP BROWSER & TUKAR TAB (AUTO-LOGOUT PVP)
+// 13. PENGESAN TUTUP BROWSER / TAB
 // ==========================================
-
-// 1. Pengesan apabila murid PANGKAH / TUTUP TAB browser
 window.addEventListener('beforeunload', function () {
-    // Hantar isyarat "Offline" secara terus sebelum browser terpadam
+    window.isGameActive = false;
     setMyOnlineStatus(false);
 });
 
-// 2. Pengesan apabila murid MINIMIZE atau TUKAR TAB (Khas untuk Tablet/Telefon)
 window.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'hidden') {
-        // Tab sedang disembunyikan / pemain buka app lain -> Set Offline & Hilangkan dari senarai PvP
         setMyOnlineStatus(false);
     } else if (document.visibilityState === 'visible') {
-        // Pemain kembali semula ke tab game -> Set Online & Idle semula
         setMyOnlineStatus(true);
     }
 });
