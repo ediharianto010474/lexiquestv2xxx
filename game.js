@@ -1409,6 +1409,7 @@ function tamatkanPertempuran(lobiId) {
 
 // Pembolehubah global
 let senaraiSoalanSemasa = [];
+let senaraiSoalan = [];
 let soalanAktif = null;
 let subjekSediaAda = "";
 let boosterAktif = null;
