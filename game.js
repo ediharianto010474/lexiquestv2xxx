@@ -4160,33 +4160,46 @@ if (avatarContainer) {
 // ==========================================
 // 📊 FUNGSI REKOD PRESTASI PERMAINAN (LOG BUKU REKOD)
 // ==========================================
-async function saveGameRecord(category, difficulty, score, maxScore) {
+async function saveGameRecord(category, difficulty, score, maxScore, multiplier = 1) {
     try {
-        // 1. Pastikan data pemain wujud
-        if (!localPlayerData || !localPlayerData.name) {
-            console.error("Gagal simpan rekod: Tiada nama pemain dijumpai.");
-            return;
-        }
+        // 1. Pastikan data pemain wujud secara selamat (elak ralat jika localPlayerData belum sedia)
+        const playerName = (typeof localPlayerData !== 'undefined' && localPlayerData && localPlayerData.name) 
+            ? localPlayerData.name 
+            : "Pemain";
 
-        // 2. Semak adakah markah ini Perfect Score (Markah Penuh)?
-        const isPerfect = (score === maxScore);
+        // 2. Tukar input kepada nombor dan wujudkan nilai fallback
+        const numScore = Number(score) || 0;
+        const numMaxScore = Number(maxScore) || 0;
+        const numMultiplier = Number(multiplier) || 1;
 
-        // 3. Susun data untuk dihantar ke Firebase
+        // 3. Kira peratusan secara automatik di dalam fungsi (elak ralat 'percentage is not defined')
+        const percentage = numMaxScore > 0 
+            ? Math.round((numScore / numMaxScore) * 100) 
+            : 0;
+
+        // 4. Semak adakah markah ini Perfect Score (Markah Penuh)?
+        const isPerfect = (numMaxScore > 0 && numScore >= numMaxScore);
+
+        // 5. Susun data untuk dihantar ke Firebase
         const newRecord = {
-            playerName: localPlayerData.name, // Nama murid
-            category: category,               // Contoh: "Missing"
-            difficulty: difficulty,           // Contoh: "Easy"
-            score: parseInt(score),
-            maxScore: parseInt(maxScore),
+            playerName: playerName,
+            category: category || "Umum",
+            difficulty: difficulty || "Biasa",
+            score: numScore,
+            maxScore: numMaxScore,
+            percentage: percentage,             // Dikira secara automatik
+            multiplier: numMultiplier,         // Mempunyai nilai lalai (default: 1)
             isPerfectScore: isPerfect,
-            timestamp: new Date().toISOString() // Tarikh & masa direkod
+            timestamp: new Date().toISOString()
         };
 
-        // 4. Hantar ke koleksi baharu: 'game_records'
-        // Kita guna .add() supaya ia cipta dokumen baru setiap kali main, bukan tindih yang lama
-        await db.collection("game_records").add(newRecord);
-        
-        console.log(`✅ Rekod permainan disimpan: ${category} (${difficulty}) - Skor: ${score}/${maxScore}`);
+        // 6. Semak kewujudan Firebase DB sebelum menyimpan
+        if (typeof db !== 'undefined' && db && typeof db.collection === 'function') {
+            await db.collection("game_records").add(newRecord);
+            console.log(`✅ Rekod permainan disimpan: ${newRecord.category} (${newRecord.difficulty}) - Skor: ${numScore}/${numMaxScore} (${percentage}%)`);
+        } else {
+            console.warn("⚠️ Pangkalan data (db) tidak dijumpai. Rekod tidak dapat dihantar ke Firebase.", newRecord);
+        }
         
     } catch (error) {
         console.error("❌ Gagal simpan rekod permainan:", error);
